@@ -1,0 +1,50 @@
+!pip install selenium
+!apt-get update
+!apt-get install firefox -y
+!apt-get install wget -y
+
+!wget https://github.com/mozilla/geckodriver/releases/download/v0.30.0/geckodriver-v0.30.0-linux64.tar.gz
+!tar -xvzf geckodriver-v0.30.0-linux64.tar.gz
+!chmod +x geckodriver
+!mv geckodriver /usr/local/bin/
+
+from selenium import webdriver
+from selenium.webdriver.firefox.service import Service
+from selenium.webdriver.firefox.options import Options
+
+# 크롤링할 키워드 입력
+keyword = input("크롤링할 키워드를 입력하세요: ")
+
+# 결과에서 반드시 포함하는 단어 입력
+include_words = input("결과에서 반드시 포함하는 단어를 입력하세요 (여러 개일 경우 ,로 구분): ").split(',')
+
+# 결과에서 제외할 단어 입력
+exclude_words = input("결과에서 제외할 단어를 입력하세요 (여러 개일 경우 ,로 구분): ").split(',')
+
+# 조회 시작일자 입력
+start_date = input("조회 시작일자를 입력하세요 (예: 2017-01-01): ")
+
+# 조회 종료일자 입력
+end_date = input("조회 종료일자를 입력하세요 (예: 2017-12-31): ")
+
+# 크롤링 할 건수 입력
+count = int(input("크롤링 할 건수를 입력하세요 (최대 1000건): "))
+
+# 파일을 저장할 폴더명 입력
+folder_name = input("파일을 저장할 폴더명을 입력하세요: ")
+
+# Firefox 웹 드라이버 설정
+options = Options()
+options.add_argument('-headless')  # 창 숨기기 모드로 설정
+service = Service('/usr/local/bin/geckodriver')  # geckodriver의 경로로 지정해야 합니다
+driver = webdriver.Firefox(service=service, options=options)
+
+# 네이버 블로그 검색 페이지 접속
+url = f"https://search.naver.com/search.naver?where=post&query={keyword}&nso=so%3Ar%2Ca%3Aall%2Cp%3Afrom{start_date}to{end_date}&sm=tab_pge&start=1"
+driver.get(url)
+
+# 크롤링 로직 작성
+# TODO: 크롤링 로직을 작성하세요.
+
+# 드라이버 종료
+driver.quit()
