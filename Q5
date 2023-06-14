@@ -1,0 +1,100 @@
+!pip install selenium
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+import time
+import csv
+import pandas as pd
+
+# 1. 유튜브에서 검색할 주제 키워드를 입력하세요.
+keyword = input("유튜브에서 검색할 주제 키워드를 입력하세요: ")
+
+# 2. 위 주제로 댓글을 크롤링할 유튜브 영상은 몇 건입니까?
+num_videos = int(input("위 주제로 댓글을 크롤링할 유튜브 영상은 몇 건입니까?: "))
+
+# 3. 각 동영상에서 추출할 댓글은 몇 건입니까?
+num_comments = int(input("각 동영상에서 추출할 댓글은 몇 건입니까?: "))
+
+# 4. 크롤링 결과를 저장할 폴더명만 쓰세요.
+folder_name = input("크롤링 결과를 저장할 폴더명만 쓰세요: ")
+
+# 웹 드라이버 경로 설정 (Chrome 버전에 맞는 드라이버를 다운로드하여 경로를 설정해야 합니다.)
+driver_path = 'C:\py_temp\chromedriver_240'  # 본인의 Chrome 드라이버 경로로 변경해야 합니다.
+
+# Chrome 드라이버로 Chrome 브라우저 실행
+driver = webdriver.Chrome(driver_path)
+
+# 유튜브 접속
+driver.get("https://www.youtube.com")
+
+# 검색어 입력
+search_box = driver.find_element_by_name("search_query")
+search_box.send_keys(keyword)
+search_box.send_keys(Keys.RETURN)
+
+# 검색 결과 페이지 로딩 대기
+time.sleep(5)
+
+# 검색 결과 중에서 영상 링크 가져오기
+video_links = driver.find_elements_by_css_selector("#video-title")
+
+# 영상 제목 및 댓글 정보 저장할 리스트 생성
+video_titles = []
+comment_texts = []
+
+# 영상 개수 제한 설정
+num_videos = min(num_videos, len(video_links))
+
+# 각 영상에서 댓글 수집
+for i in range(num_videos):
+    video_link = video_links[i]
+    video_title = video_link.text
+    video_titles.append(video_title)
+    
+    # 영상 링크 클릭
+    video_link.click()
+    
+    # 영상 로딩 대기
+    time.sleep(5)
+    
+    # 댓글 수집
+    comment_section = driver.find_element_by_css_selector("#comments")
+    comments = comment_section.find_elements_by_css_selector("#content-text")
+    
+    # 영상 별로 추출할 댓글 개수 제한 설정
+    num_comments = min(num_comments, len(comments))
+    
+    for j in range(num_comments):
+        comment_text = comments[j].text
+        comment_texts.append(comment_text)
+    
+    # 댓글 수집 완료 후 영상 페이지 뒤로 가기
+    driver.execute_script("window.history.go(-1)")
+    
+    # 검색 결과 페이지 로딩 대기
+    time.sleep(5)
+
+# 크롤링 결과를 저장할 파일 경로
+txt_file_path = f"{folder_name}/comments.txt"
+csv_file_path = f"{folder_name}/comments.csv"
+xls_file_path = f"{folder_name}/comments.xls"
+
+# 댓글을 txt 파일로 저장
+with open(txt_file_path, "w", encoding="utf-8") as txt_file:
+    for comment in comment_texts:
+        txt_file.write(comment + "\n")
+
+# 댓글을 csv 파일로 저장
+with open(csv_file_path, "w", encoding="utf-8", newline="") as csv_file:
+    writer = csv.writer(csv_file)
+    writer.writerow(["Comment"])
+    for comment in comment_texts:
+        writer.writerow([comment])
+
+# 댓글을 xls 파일로 저장
+df = pd.DataFrame({"Comment": comment_texts})
+df.to_excel(xls_file_path, index=False)
+
+# 크롬 드라이버 종료
+driver.quit()
+
+print("댓글 크롤링이 완료되었습니다.")
