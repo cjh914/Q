@@ -1,0 +1,42 @@
+import os
+import requests
+from bs4 import BeautifulSoup
+
+# 크롤링할 키워드 입력
+keyword = input("1. 크롤링할 키워드는 무엇입니까? : ")
+
+# 크롤링할 건수 입력
+count = int(input("2. 크롤링 할 건수는 몇건입니까? : "))
+
+# 파일이 저장될 경로 입력
+save_path = input("3. 파일이 저장될 경로를 입력하세요: ")
+
+# 입력한 경로가 존재하는지 확인하고 없다면 생성
+if not os.path.exists(save_path):
+    os.makedirs(save_path)
+    print(f"입력하신 경로가 존재하지 않아 새로운 폴더 '{save_path}'를 생성했습니다.")
+
+# Google 사이트에서 검색 결과 크롤링
+url = f"https://www.google.com/search?q={keyword}&tbm=isch"
+response = requests.get(url)
+response.raise_for_status()
+soup = BeautifulSoup(response.text, "html.parser")
+images = soup.find_all("img")
+
+# 크롤링된 이미지 다운로드
+downloaded_count = 0
+for img in images:
+    if downloaded_count >= count:
+        break
+    img_url = img["src"]
+    if img_url.endswith(".pdf"):
+        response = requests.get(img_url)
+        response.raise_for_status()
+        file_name = img_url.split("/")[-1]
+        file_path = os.path.join(save_path, file_name)
+        with open(file_path, "wb") as file:
+            file.write(response.content)
+        downloaded_count += 1
+        print(f"{downloaded_count}. {file_name}을(를) 다운로드 받았습니다.")
+
+print("파일 다운로드가 완료되었습니다.")
