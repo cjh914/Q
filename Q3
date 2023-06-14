@@ -1,0 +1,40 @@
+!pip install requests
+
+import requests
+import os
+
+def download_images(keyword, num_images, save_path):
+    url = 'https://pixabay.com/api/'
+    api_key = 'YOUR_API_KEY'  # Pixabay에서 발급받은 API 키를 입력하세요
+
+    payload = {
+        'key': api_key,
+        'q': keyword,
+        'image_type': 'photo',
+        'per_page': num_images
+    }
+
+    response = requests.get(url, params=payload)
+    data = response.json()
+
+    if 'hits' in data:
+        hits = data['hits']
+        for i, image in enumerate(hits):
+            image_url = image['largeImageURL']
+            image_data = requests.get(image_url).content
+
+            file_name = f'{keyword}_{i + 1}.jpg'
+            file_path = os.path.join(save_path, file_name)
+
+            with open(file_path, 'wb') as file:
+                file.write(image_data)
+
+            print(f'Saved {file_name}')
+    else:
+        print('No images found.')
+
+keyword = input("1. 크롤링할 이미지의 키워드는 무엇입니까? : ")
+num_images = int(input("2. 크롤링 할 건수는 몇건입니까? : "))
+save_path = input("3. 파일이 저장될 경로만 쓰세요 : ")
+
+download_images(keyword, num_images, save_path)
